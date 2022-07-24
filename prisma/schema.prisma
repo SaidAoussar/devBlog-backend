@@ -1,0 +1,78 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+model User{
+  id Int @id @default(autoincrement())
+  firstName String @db.VarChar(50)	
+  lastName String @db.VarChar(50)
+  email String @unique @db.VarChar(50)
+  password String
+  registeredAt DateTime @default(now())
+  intro String @db.Text
+  posts Post[]
+  comments Comment[]
+}
+
+model Post{
+  id Int @id @default(autoincrement())
+  title String @db.VarChar(75)
+  slug String @db.VarChar(100) @unique
+  content String? @db.Text
+  published Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  publishedAt DateTime?
+
+  comments Comment[]
+
+  author User @relation(fields: [authorId], references: [id])
+  authorId Int
+
+  categories CategoriesOnPosts[]
+
+
+}
+
+
+model Comment{
+  id Int @id @default(autoincrement())
+  title String @db.VarChar(100)
+  published Boolean @default(false)
+  createdAt DateTime @default(now())
+  publishedAt DateTime?
+  content String? @db.Text
+
+  post Post @relation(fields: [postId], references: [id])
+  postId Int
+
+  user User @relation(fields: [userId],references: [id])
+  userId Int
+}
+
+model Category{
+  id Int @id @default(autoincrement())
+  name String
+
+  posts CategoriesOnPosts[]
+}
+
+model CategoriesOnPosts {
+  post Post @relation(fields: [postId], references: [id])
+  postId Int
+
+  category Category @relation(fields: [categoryId], references: [id]) 
+  categoryId Int
+
+
+  @@id([postId, categoryId])
+}
