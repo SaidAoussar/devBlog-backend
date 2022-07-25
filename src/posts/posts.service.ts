@@ -8,7 +8,25 @@ export class PostsService {
   constructor(readonly prisma: PrismaService) {}
 
   create(createPostDto: CreatePostDto) {
-    return 'This action adds a new post';
+    const { published, title } = createPostDto;
+
+    const slug = title.split(' ').join('-');
+
+    let data = {
+      ...createPostDto,
+      slug,
+      author: {
+        connect: { id: 2 },
+      },
+    };
+    // check if post published to add dat published at
+    if (published) {
+      data['publishedAt'] = new Date();
+    }
+
+    return this.prisma.post.create({
+      data,
+    });
   }
 
   async findAll(page: number, per_page: number) {
@@ -49,11 +67,36 @@ export class PostsService {
   }
 
   findOne(id: number) {
-    return `This action returns a #${id} post`;
+    return this.prisma.post.findUnique({
+      where: {
+        id,
+      },
+    });
   }
 
-  update(id: number, updatePostDto: UpdatePostDto) {
-    return `This action updates a #${id} post`;
+  async update(id: number, updatePostDto: UpdatePostDto) {
+    const data = updatePostDto;
+
+    if (updatePostDto?.title) {
+      data['slug'] = updatePostDto?.title.split(' ').join('-');
+    }
+
+    if (updatePostDto?.published) {
+      const post = await this.prisma.post.findUnique({
+        where: { id },
+      });
+
+      if (post.publishedAt === null) {
+        data['publishedAt'] = new Date();
+      }
+    }
+
+    return this.prisma.post.update({
+      where: {
+        id,
+      },
+      data,
+    });
   }
 
   remove(id: number) {
