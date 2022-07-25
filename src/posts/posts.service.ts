@@ -11,8 +11,41 @@ export class PostsService {
     return 'This action adds a new post';
   }
 
-  findAll() {
-    return this.prisma.post.findMany();
+  async findAll(page: number, per_page: number) {
+    if (isNaN(page)) {
+      page = 1;
+    }
+
+    if (isNaN(per_page)) {
+      per_page = 3;
+    }
+
+    const where = {
+      published: true,
+    };
+
+    const total_count = await this.prisma.post.count({
+      where,
+    });
+
+    if (Math.ceil(total_count / per_page) < page || page < 1) {
+      return {};
+    }
+
+    const records = await this.prisma.post.findMany({
+      skip: per_page * (page - 1),
+      take: per_page,
+      where,
+    });
+
+    return {
+      _metadata: {
+        page,
+        per_page,
+        total_count,
+      },
+      records,
+    };
   }
 
   findOne(id: number) {
