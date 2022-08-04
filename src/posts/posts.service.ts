@@ -19,7 +19,7 @@ export class PostsService {
         connect: { id: 2 },
       },
     };
-    // check if post published to add dat published at
+    // check if post published to add date published at
     if (published) {
       data['publishedAt'] = new Date();
     }
@@ -100,6 +100,10 @@ export class PostsService {
   }
 
   remove(id: number) {
-    return `This action removes a #${id} post`;
+    return this.prisma.post.delete({
+      where: {
+        id,
+      },
+    });
   }
 }
