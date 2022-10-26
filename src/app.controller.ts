@@ -15,11 +15,11 @@ export class AppController {
     return this.appService.getHello();
   }
 
-  @UseGuards(AuthGuard('local'))
-  @Post('/auth/login')
-  async login(@Request() req) {
-    return this.authService.login(req.user);
-  }
+  // @UseGuards(AuthGuard('local'))
+  // @Post('/auth/login')
+  // async login(@Request() req) {
+  //   return this.authService.login(req.user);
+  // }
 
   @UseGuards(AuthGuard('jwt'))
   @Get('/profil')
