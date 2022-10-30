@@ -1,24 +1,52 @@
-import { Controller, Request, Post, UseGuards, Body } from '@nestjs/common';
+import {
+  Controller,
+  Request,
+  Post,
+  UseGuards,
+  Body,
+  Query,
+  Get,
+  Param,
+} from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { AuthGuard } from '@nestjs/passport';
+import { ApiTags } from '@nestjs/swagger';
+import { query } from 'express';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
-import { UsersService } from 'src/users/users.service';
 import { AuthService } from './auth.service';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
+@ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(
-    private authService: AuthService,
-    private usersService: UsersService,
-  ) {}
+  constructor(private authService: AuthService) {}
 
   @UseGuards(AuthGuard('local'))
   @Post('/login')
-  async login(@Request() req) {
+  login(@Request() req) {
     return this.authService.login(req.user);
   }
 
   @Post('/register')
-  register(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
+  async register(@Body() createUserDto: CreateUserDto) {
+    return await this.authService.register(createUserDto);
+  }
+
+  @Get('/activate_account/:token')
+  activateAccount(@Param('token') token: string): Promise<any> {
+    return this.authService.activateAccount(token);
+  }
+
+  @Get('/forgot-password/:email')
+  forgotPassword(@Param('email') email: string): Promise<any> {
+    return this.authService.forgotPassword(email);
+  }
+
+  @Post('/change-password/:token')
+  changePassword(
+    @Body() changePasswordDto: ChangePasswordDto,
+    @Param('token') token: string,
+  ) {
+    return this.authService.changePassword(changePasswordDto, token);
   }
 }

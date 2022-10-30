@@ -8,6 +8,7 @@ import { AuthService } from './auth.service';
 
 import { jwtConstants } from './constants';
 import { AuthController } from './auth.controller';
+import { MailModule } from 'src/mail/mail.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { AuthController } from './auth.controller';
       secret: jwtConstants.secret,
       signOptions: { expiresIn: '7d' },
     }),
+    MailModule,
   ],
   providers: [AuthService, LocalStrategy, JwtStrategy],
   controllers: [AuthController],
