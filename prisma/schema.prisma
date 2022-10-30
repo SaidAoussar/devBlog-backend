@@ -13,9 +13,10 @@ model User {
   lastName     String    @db.VarChar(50)
   email        String    @unique @db.VarChar(50)
   password     String?
-  registeredAt DateTime  @default(now())
   intro        String?
   img          String?
+  active       Boolean @default(false)
+  registeredAt DateTime  @default(now())
   comments     Comment[]
   posts        Post[]
 }
@@ -30,8 +31,9 @@ model Post {
   updatedAt   DateTime            @updatedAt
   publishedAt DateTime?
   authorId    Int
-  author      User                @relation(fields: [authorId], references: [id])
-  categories  CategoriesOnPosts[]
+  author      User                @relation(fields: [authorId], references: [id],onDelete: Cascade)
+  categoryId  Int?
+  category    Category?            @relation(fields:[categoryId],references: [id],onDelete: SetNull)
   comments    Comment[]
   tags        TagsOnPosts[]
 }
@@ -45,24 +47,16 @@ model Comment {
   content     String?
   postId      Int
   userId      Int
-  post        Post      @relation(fields: [postId], references: [id])
-  user        User      @relation(fields: [userId], references: [id])
+  post        Post      @relation(fields: [postId], references: [id],onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id],onDelete: Cascade)
 }
 
 model Category {
   id    Int                 @id @default(autoincrement())
   name  String
-  posts CategoriesOnPosts[]
+  posts Post[]
 }
 
-model CategoriesOnPosts {
-  postId     Int
-  categoryId Int
-  category   Category @relation(fields: [categoryId], references: [id])
-  post       Post     @relation(fields: [postId], references: [id])
-
-  @@id([postId, categoryId])
-}
 
 model Tag {
   id    Int           @id @default(autoincrement())
@@ -73,8 +67,8 @@ model Tag {
 model TagsOnPosts {
   postId Int
   tagId  Int
-  post   Post @relation(fields: [postId], references: [id])
-  tag    Tag  @relation(fields: [tagId], references: [id])
+  post   Post @relation(fields: [postId], references: [id],onDelete: Cascade,onUpdate: Cascade)
+  tag    Tag  @relation(fields: [tagId], references: [id],onDelete: Cascade)
 
   @@id([postId, tagId])
 }
