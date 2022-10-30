@@ -1,7 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
+  IsArray,
   IsBoolean,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsString,
   MinLength,
@@ -19,6 +21,22 @@ export class CreatePostDto {
   @MinLength(100)
   @ApiProperty()
   content: string;
+
+  @IsNotEmpty()
+  @IsNumber()
+  @ApiProperty()
+  authorId: number;
+
+  @IsNumber()
+  @IsOptional()
+  @ApiProperty()
+  categoryId: number;
+
+  @IsArray()
+  @IsNumber({}, { each: true })
+  @IsOptional()
+  @ApiProperty()
+  tags: number[];
 
   @IsBoolean()
   @IsOptional()

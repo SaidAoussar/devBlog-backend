@@ -7,16 +7,28 @@ import { UpdatePostDto } from './dto/update-post.dto';
 export class PostsService {
   constructor(readonly prisma: PrismaService) {}
 
-  create(createPostDto: CreatePostDto) {
-    const { published, title } = createPostDto;
+  async create(createPostDto: CreatePostDto) {
+    const { published, title, content, authorId, categoryId, tags } =
+      createPostDto;
 
     const slug = title.split(' ').join('-');
 
     let data = {
-      ...createPostDto,
+      title,
+      content,
+      published,
       slug,
-      author: {
-        connect: { id: 2 },
+      authorId,
+      categoryId,
+      tags: {
+        create:
+          tags?.map((tagId) => ({
+            tag: {
+              connect: {
+                id: tagId,
+              },
+            },
+          })) || [],
       },
     };
     // check if post published to add date published at
@@ -24,9 +36,20 @@ export class PostsService {
       data['publishedAt'] = new Date();
     }
 
-    return this.prisma.post.create({
-      data,
-    });
+    try {
+      const result = await this.prisma.post.create({
+        data,
+      });
+      return result;
+    } catch (error) {
+      console.log(error);
+      if (error.code === 'P2003') {
+        console.log(
+          'Foreign key constraint failed on the field' + error.meta.field_name,
+        );
+        return error;
+      }
+    }
   }
 
   async findAll(page: number, per_page: number) {
@@ -46,6 +69,7 @@ export class PostsService {
       where,
     });
 
+    // we check if total page less then page (page user enter). if is true we return {},
     if (Math.ceil(total_count / per_page) < page || page < 1) {
       return {};
     }
@@ -75,12 +99,19 @@ export class PostsService {
   }
 
   async update(id: number, updatePostDto: UpdatePostDto) {
-    const data = updatePostDto;
+    const { tags, ...data } = updatePostDto;
 
+    /**
+     * if title exist in request we should update slug too
+     */
     if (updatePostDto?.title) {
       data['slug'] = updatePostDto?.title.split(' ').join('-');
     }
 
+    /**
+     * if published field exist in request and is true . we check if field publishedAt is
+     * null,if it is null we change it to now date.
+     */
     if (updatePostDto?.published) {
       const post = await this.prisma.post.findUnique({
         where: { id },
@@ -90,8 +121,51 @@ export class PostsService {
         data['publishedAt'] = new Date();
       }
     }
+    /**
+     * update tags:
+     * we recive from request fields tags include tags that author want to be the tags of
+     * his post.
+     *  - if he send empty array means no tags attach to post we should delete all tags
+     * exist in post.
+     * -if he send array with value (id) means this ids is the tags that he want to attach
+     * to post.
+     * example : [1,3] => this tags we recive this tags want user to be tags of post.
+     * author example this how this code work :
+     * - we recive array of ids tag (tags) => [1, 3]
+     * - the post have tags already (existTags) => [1,2,3]
+     * - now we decide what tags delete what tags add.
+     * - delete ids => [1,2,3] - [1,3] = [2]
+     * - add ids => [1,3] - [1,2,3] = []
+     */
+    if (tags) {
+      const existTags = await this.prisma.tagsOnPosts.findMany({
+        where: {
+          postId: id,
+        },
+      });
+      let formatExistTags = existTags.map((tag) => tag.tagId);
 
-    return this.prisma.post.update({
+      const deleteTags = formatExistTags.filter((tag) => !tags.includes(tag));
+      console.log('delete', deleteTags);
+      const newTags = tags.filter((tag) => !formatExistTags.includes(tag));
+      console.log('new : ', newTags);
+
+      const deletedTagsOfPost = await this.prisma.tagsOnPosts.deleteMany({
+        where: {
+          postId: id,
+          tagId: { in: deleteTags },
+        },
+      });
+
+      const addTagsToPost = await this.prisma.tagsOnPosts.createMany({
+        data: newTags.map((tag) => ({
+          postId: id,
+          tagId: tag,
+        })),
+      });
+    }
+
+    return await this.prisma.post.update({
       where: {
         id,
       },
