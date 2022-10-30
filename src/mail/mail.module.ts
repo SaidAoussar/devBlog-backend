@@ -8,8 +8,8 @@ import { MailService } from './mail.service';
       transport: {
         service: 'Gmail',
         auth: {
-          user: 'aoussarsaid33@gmail.com',
-          pass: 'wbzyaazttnuirrsw',
+          user: process.env.MAIL_USER,
+          pass: process.env.MAIL_PASS,
         },
       },
     }),
