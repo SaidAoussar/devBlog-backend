@@ -13,7 +13,7 @@ export class PostsService {
 
     const slug = title.split(' ').join('-');
 
-    let data = {
+    const data = {
       title,
       content,
       published,
@@ -58,7 +58,7 @@ export class PostsService {
     }
 
     if (isNaN(per_page)) {
-      per_page = 3;
+      per_page = 10;
     }
 
     const where = {
@@ -90,12 +90,31 @@ export class PostsService {
     };
   }
 
-  findOne(id: number) {
-    return this.prisma.post.findUnique({
+  async findAllByAuthor(id: number) {
+    const posts = await this.prisma.post.findMany({
+      where: { authorId: id },
+    });
+
+    return posts;
+  }
+
+  async findOne(id: number) {
+    // Modeling and querying many-to-many relations
+    const posts = await this.prisma.post.findUnique({
       where: {
         id,
       },
+      include: {
+        author: true,
+        tags: { include: { tag: true } }, // Return all fields
+        category: true,
+      },
     });
+
+    return {
+      ...posts,
+      tags: posts.tags.map((tags) => tags.tag),
+    };
   }
 
   async update(id: number, updatePostDto: UpdatePostDto) {
@@ -143,7 +162,7 @@ export class PostsService {
           postId: id,
         },
       });
-      let formatExistTags = existTags.map((tag) => tag.tagId);
+      const formatExistTags = existTags.map((tag) => tag.tagId);
 
       const deleteTags = formatExistTags.filter((tag) => !tags.includes(tag));
       console.log('delete', deleteTags);

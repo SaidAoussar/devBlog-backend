@@ -24,8 +24,9 @@ export class AppController {
     return this.appService.getHello();
   }
 
+  //get user auth when send token
   @UseGuards(AuthGuard('jwt'))
-  @Get('/profil')
+  @Get('/profile')
   getProfile(@Request() req) {
     return req.user;
   }

@@ -24,8 +24,13 @@ export class PostsController {
     return this.postsService.findAll(+query.page, +query.per_page);
   }
 
+  @Get('user/:id')
+  findAllByAuthor(@Param('id', ParseIntPipe) id: number): Promise<any> {
+    return this.postsService.findAllByAuthor(id);
+  }
+
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  findOne(@Param('id', ParseIntPipe) id: number): Promise<any> {
     return this.postsService.findOne(id);
   }
 
