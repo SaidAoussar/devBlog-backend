@@ -7,19 +7,15 @@ import { UpdatePostDto } from './dto/update-post.dto';
 export class PostsService {
   constructor(readonly prisma: PrismaService) {}
 
-  async create(createPostDto: CreatePostDto) {
-    const { published, title, content, authorId, categoryId, tags } =
-      createPostDto;
+  async create(authorId: number, createPostDto: CreatePostDto) {
+    const { published, title, tags } = createPostDto;
 
     const slug = title.split(' ').join('-');
 
     const data = {
-      title,
-      content,
-      published,
+      ...createPostDto,
       slug,
       authorId,
-      categoryId,
       tags: {
         create:
           tags?.map((tagId) => ({
@@ -117,8 +113,13 @@ export class PostsService {
     };
   }
 
-  async update(id: number, updatePostDto: UpdatePostDto) {
+  async update(id: number, authorId: number, updatePostDto: UpdatePostDto) {
     const { tags, ...data } = updatePostDto;
+
+    // if categoryId = -1 means we remove category from post
+    if (data.categoryId === -1) {
+      data.categoryId = null;
+    }
 
     /**
      * if title exist in request we should update slug too

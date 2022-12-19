@@ -22,10 +22,10 @@ export class CreatePostDto {
   @ApiProperty()
   content: string;
 
-  @IsNotEmpty()
-  @IsNumber()
-  @ApiProperty()
-  authorId: number;
+  // @IsNotEmpty()
+  // @IsNumber()
+  // @ApiProperty()
+  // authorId: number;
 
   @IsNumber()
   @IsOptional()

@@ -8,7 +8,11 @@ import {
   Query,
   ParseIntPipe,
   Patch,
+  UseGuards,
+  Request,
 } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+import { User } from '../utils/user.decorator';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
@@ -34,17 +38,21 @@ export class PostsController {
     return this.postsService.findOne(id);
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Post()
-  create(@Body() createPostDto: CreatePostDto) {
-    return this.postsService.create(createPostDto);
+  create(@User() user, @Body() createPostDto: CreatePostDto) {
+    return this.postsService.create(+user.id, createPostDto);
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Patch(':id')
   update(
+    @User() user,
     @Param('id', ParseIntPipe) id: number,
     @Body() updatePostDto: UpdatePostDto,
   ) {
-    return this.postsService.update(id, updatePostDto);
+    console.log(updatePostDto);
+    return this.postsService.update(id, user.id, updatePostDto);
   }
 
   @Delete(':id')
