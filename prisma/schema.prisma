@@ -23,8 +23,8 @@ model User {
 
 model Post {
   id          Int                 @id @default(autoincrement())
-  title       String              @db.VarChar(75)
-  slug        String              @unique @db.VarChar(100)
+  title       String              @db.VarChar()
+  slug        String              @unique @db.VarChar()
   content     String?
   published   Boolean             @default(false)
   createdAt   DateTime            @default(now())

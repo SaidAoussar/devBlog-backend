@@ -74,6 +74,10 @@ export class PostsService {
       skip: per_page * (page - 1),
       take: per_page,
       where,
+      include: {
+        author: true,
+        category: true,
+      },
     });
 
     return {
