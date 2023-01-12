@@ -7,6 +7,8 @@ import {
   UseInterceptors,
   UploadedFile,
   Body,
+  UseGuards,
+  Query,
 } from '@nestjs/common';
 
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -17,15 +19,29 @@ import { Express } from 'express';
 import { diskStorage } from 'multer';
 import { access, unlinkSync } from 'fs';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { User } from '../utils/user.decorator';
+import { UpdatePasswordDto } from './dto/update-password.dto';
+import { AuthGuard } from '@nestjs/passport';
 
 @ApiTags('users')
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  @Get()
+  findAll(@Query() query) {
+    return this.usersService.findAll(+query.page, +query.per_page, query.q);
+  }
+
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number): Promise<any> {
     return this.usersService.findOne(id);
+  }
+
+  @Patch('update-password')
+  @UseGuards(AuthGuard('jwt'))
+  updatePassword(@User() user, @Body() updatePasswordDto: UpdatePasswordDto) {
+    return this.usersService.setNewPassword(+user.id, updatePasswordDto);
   }
 
   @Patch(':id')
@@ -70,3 +86,12 @@ export class UsersController {
     return this.usersService.update(id, data);
   }
 }
+
+/*
+the problem i found here : 
+Order matters here, @Get('/vorgesetzter') should be implemented before @Get(':id'). With that request you are calling this.benutzerService.findBenutzerByID(id); with the following string: vorgesetzter?istVorgesetzter=true receiving the error you describe.
+
+This is how express is implemented and NestJS follows the same behaviour: expressjs/express#2235, nestjs/nest#995
+
+
+*/

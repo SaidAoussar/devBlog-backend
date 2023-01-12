@@ -24,6 +24,11 @@ export class CreateUserDto {
   intro: string;
 
   @IsString()
+  @IsNotEmpty()
+  @ApiProperty()
+  username: string;
+
+  @IsString()
   @IsOptional()
   @ApiProperty({ required: false, default: false })
   img: string;
