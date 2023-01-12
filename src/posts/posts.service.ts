@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Express } from 'express';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
@@ -18,13 +19,18 @@ export class PostsService {
       authorId,
       tags: {
         create:
-          tags?.map((tagId) => ({
-            tag: {
-              connect: {
-                id: tagId,
+          tags?.map((tagId) => {
+            const id: number = parseInt(tagId);
+            console.log('tag id', typeof id);
+
+            return {
+              tag: {
+                connect: {
+                  id,
+                },
               },
-            },
-          })) || [],
+            };
+          }) || [],
       },
     };
     // check if post published to add date published at
@@ -48,7 +54,7 @@ export class PostsService {
     }
   }
 
-  async findAll(page: number, per_page: number) {
+  async findAll(page: number, per_page: number, q: string, author: number) {
     if (isNaN(page)) {
       page = 1;
     }
@@ -57,9 +63,26 @@ export class PostsService {
       per_page = 10;
     }
 
-    const where = {
-      published: true,
+    let where: any = {
+      AND: [{ published: true }],
     };
+
+    if (q) {
+      where = {
+        ...where,
+        OR: [
+          { content: { contains: q, mode: 'insensitive' } },
+          { title: { contains: q, mode: 'insensitive' } },
+        ],
+      };
+    }
+
+    if (author) {
+      where = {
+        ...where,
+        AND: [...where.AND, { authorId: author }],
+      };
+    }
 
     const total_count = await this.prisma.post.count({
       where,
@@ -70,13 +93,13 @@ export class PostsService {
       return {};
     }
 
-    const records = await this.prisma.post.findMany({
+    const records: any = await this.prisma.post.findMany({
       skip: per_page * (page - 1),
       take: per_page,
       where,
       include: {
         author: true,
-        category: true,
+        tags: { include: { tag: true } },
       },
     });
 
@@ -107,23 +130,17 @@ export class PostsService {
       include: {
         author: true,
         tags: { include: { tag: true } }, // Return all fields
-        category: true,
       },
     });
 
     return {
       ...posts,
-      tags: posts.tags.map((tags) => tags.tag),
+      tags: posts.tags.map((t) => t.tag),
     };
   }
 
   async update(id: number, authorId: number, updatePostDto: UpdatePostDto) {
     const { tags, ...data } = updatePostDto;
-
-    // if categoryId = -1 means we remove category from post
-    if (data.categoryId === -1) {
-      data.categoryId = null;
-    }
 
     /**
      * if title exist in request we should update slug too
@@ -169,9 +186,10 @@ export class PostsService {
       });
       const formatExistTags = existTags.map((tag) => tag.tagId);
 
-      const deleteTags = formatExistTags.filter((tag) => !tags.includes(tag));
-      console.log('delete', deleteTags);
-      const newTags = tags.filter((tag) => !formatExistTags.includes(tag));
+      const deleteTags = formatExistTags.filter(
+        (tag) => !tags.includes(tag.toString()),
+      );
+      const newTags = tags.filter((tag) => !formatExistTags.includes(+tag));
       console.log('new : ', newTags);
 
       const deletedTagsOfPost = await this.prisma.tagsOnPosts.deleteMany({
@@ -184,7 +202,7 @@ export class PostsService {
       const addTagsToPost = await this.prisma.tagsOnPosts.createMany({
         data: newTags.map((tag) => ({
           postId: id,
-          tagId: tag,
+          tagId: +tag,
         })),
       });
     }
@@ -203,5 +221,16 @@ export class PostsService {
         id,
       },
     });
+  }
+
+  async nbrPostsOfUser(id: number) {
+    const nbrPosts = await this.prisma.post.count({
+      where: {
+        authorId: id,
+        published: true,
+      },
+    });
+
+    return { nbrPosts };
   }
 }

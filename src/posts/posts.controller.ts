@@ -9,14 +9,19 @@ import {
   ParseIntPipe,
   Patch,
   UseGuards,
-  Request,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { v4 as uuidv4 } from 'uuid';
+import { diskStorage } from 'multer';
+import { ApiTags } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+
 import { User } from '../utils/user.decorator';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
-import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('posts')
 @Controller('posts')
@@ -25,7 +30,12 @@ export class PostsController {
 
   @Get()
   findAll(@Query() query) {
-    return this.postsService.findAll(+query.page, +query.per_page);
+    return this.postsService.findAll(
+      +query.page,
+      +query.per_page,
+      query.q,
+      +query.author,
+    );
   }
 
   @Get('user/:id')
@@ -40,8 +50,26 @@ export class PostsController {
 
   @UseGuards(AuthGuard('jwt'))
   @Post()
-  create(@User() user, @Body() createPostDto: CreatePostDto) {
-    return this.postsService.create(+user.id, createPostDto);
+  @UseInterceptors(
+    FileInterceptor('cover', {
+      storage: diskStorage({
+        destination: './post-cover',
+        filename: (req, file, cb) => {
+          const extention = file.originalname.split('.').pop();
+          cb(null, `${uuidv4()}.${extention}`);
+        },
+      }),
+    }),
+  )
+  create(
+    @UploadedFile() cover: Express.Multer.File,
+    @User() user,
+    @Body() createPostDto: CreatePostDto,
+  ) {
+    return this.postsService.create(+user.id, {
+      ...createPostDto,
+      cover: cover?.filename || null,
+    });
   }
 
   @UseGuards(AuthGuard('jwt'))
@@ -58,5 +86,10 @@ export class PostsController {
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.postsService.remove(id);
+  }
+
+  @Get('nbrPostsOfUser/:id')
+  nbrPostsOfUser(@Param('id', ParseIntPipe) id: number) {
+    return this.postsService.nbrPostsOfUser(id);
   }
 }
