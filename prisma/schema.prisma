@@ -12,6 +12,7 @@ model User {
   firstName    String    @db.VarChar(50)
   lastName     String    @db.VarChar(50)
   email        String    @unique @db.VarChar(50)
+  username     String    @unique    
   password     String?
   intro        String?
   img          String?
@@ -27,13 +28,12 @@ model Post {
   slug        String              @unique @db.VarChar()
   content     String?
   published   Boolean             @default(false)
+  cover       String?
   createdAt   DateTime            @default(now())
   updatedAt   DateTime            @updatedAt
   publishedAt DateTime?
   authorId    Int
   author      User                @relation(fields: [authorId], references: [id],onDelete: Cascade)
-  categoryId  Int?
-  category    Category?            @relation(fields:[categoryId],references: [id],onDelete: SetNull)
   comments    Comment[]
   tags        TagsOnPosts[]
 }
@@ -51,11 +51,6 @@ model Comment {
   user        User      @relation(fields: [userId], references: [id],onDelete: Cascade)
 }
 
-model Category {
-  id    Int                 @id @default(autoincrement())
-  name  String
-  posts Post[]
-}
 
 
 model Tag {
