@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { CommentsService } from './comments.service';
@@ -43,5 +44,10 @@ export class CommentsController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.commentsService.remove(+id);
+  }
+
+  @Get('nbrCommentsOfUser/:id')
+  nbrPostsOfUser(@Param('id', ParseIntPipe) id: number) {
+    return this.commentsService.nbrCommentsOfUser(id);
   }
 }

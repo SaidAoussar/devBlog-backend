@@ -51,4 +51,14 @@ export class CommentsService {
       },
     });
   }
+
+  async nbrCommentsOfUser(id: number) {
+    const nbrComments = await this.prisma.comment.count({
+      where: {
+        userId: id,
+      },
+    });
+
+    return { nbrComments };
+  }
 }
