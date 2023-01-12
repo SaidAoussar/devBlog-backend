@@ -12,8 +12,47 @@ export class TagsService {
     });
   }
 
-  findAll() {
-    return this.prisma.tag.findMany();
+  async findAll(paginate: string, page: number, per_page: number, q: string) {
+    if (paginate === 'false') {
+      return this.prisma.tag.findMany();
+    }
+    if (isNaN(page)) {
+      page = 1;
+    }
+
+    if (isNaN(per_page)) {
+      per_page = 10;
+    }
+
+    let where = {};
+
+    if (q) {
+      where = {
+        name: { contains: q, mode: 'insensitive' },
+      };
+    }
+
+    const total_count = await this.prisma.tag.count({
+      where,
+    });
+
+    if (Math.ceil(total_count / per_page) < page || page < 1) {
+      return {};
+    }
+
+    const records = await this.prisma.tag.findMany({
+      skip: per_page * (page - 1),
+      take: per_page,
+      where,
+    });
+    return {
+      _metadata: {
+        page,
+        per_page,
+        total_count,
+      },
+      records,
+    };
   }
 
   findOne(id: number) {
