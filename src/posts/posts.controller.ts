@@ -35,6 +35,7 @@ export class PostsController {
       +query.per_page,
       query.q,
       +query.author,
+      +query.tag_id,
     );
   }
 
@@ -88,8 +89,13 @@ export class PostsController {
     return this.postsService.remove(id);
   }
 
-  @Get('nbrPostsOfUser/:id')
+  @Get('nbr-posts-user/:id')
   nbrPostsOfUser(@Param('id', ParseIntPipe) id: number) {
     return this.postsService.nbrPostsOfUser(id);
+  }
+
+  @Get('nbr-posts-tag/:id')
+  nbrPostsOfTag(@Param('id', ParseIntPipe) id: number) {
+    return this.postsService.nbrPostsByTag(id);
   }
 }

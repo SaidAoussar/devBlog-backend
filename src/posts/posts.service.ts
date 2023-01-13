@@ -54,7 +54,13 @@ export class PostsService {
     }
   }
 
-  async findAll(page: number, per_page: number, q: string, author: number) {
+  async findAll(
+    page: number,
+    per_page: number,
+    q: string,
+    author: number,
+    tag_id: number,
+  ) {
     if (isNaN(page)) {
       page = 1;
     }
@@ -84,6 +90,20 @@ export class PostsService {
       };
     }
 
+    if (tag_id) {
+      where = {
+        ...where,
+        AND: [
+          ...where.AND,
+          {
+            tags: {
+              some: { tagId: tag_id },
+            },
+          },
+        ],
+      };
+    }
+
     const total_count = await this.prisma.post.count({
       where,
     });
@@ -101,6 +121,7 @@ export class PostsService {
         author: true,
         tags: { include: { tag: true } },
       },
+      orderBy: [{ createdAt: 'desc' }],
     });
 
     return {
@@ -227,6 +248,19 @@ export class PostsService {
     const nbrPosts = await this.prisma.post.count({
       where: {
         authorId: id,
+        published: true,
+      },
+    });
+
+    return { nbrPosts };
+  }
+
+  async nbrPostsByTag(id: number) {
+    const nbrPosts = await this.prisma.post.count({
+      where: {
+        tags: {
+          some: { tagId: id },
+        },
         published: true,
       },
     });

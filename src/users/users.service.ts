@@ -77,6 +77,14 @@ export class UsersService {
       where: {
         id,
       },
+      include: {
+        _count: {
+          select: {
+            posts: true,
+            comments: true,
+          },
+        },
+      },
     });
 
     if (!user) {

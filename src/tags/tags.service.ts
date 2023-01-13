@@ -44,6 +44,11 @@ export class TagsService {
       skip: per_page * (page - 1),
       take: per_page,
       where,
+      include: {
+        _count: {
+          select: { posts: true },
+        },
+      },
     });
     return {
       _metadata: {
