@@ -1,8 +1,12 @@
 import { Injectable } from '@nestjs/common';
+import randomstring = require('randomstring');
+import slugify from 'slugify';
 
 @Injectable()
 export class AppService {
-  getHello(): string {
-    return 'Hello World!';
+  getHello() {
+    const randomstr = slugify('ello from kasa');
+
+    return randomstr;
   }
 }

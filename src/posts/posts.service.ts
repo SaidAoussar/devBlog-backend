@@ -1,8 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { Express } from 'express';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
+import slugify from 'slugify';
+import randomstring = require('randomstring');
 
 @Injectable()
 export class PostsService {
@@ -11,7 +13,16 @@ export class PostsService {
   async create(authorId: number, createPostDto: CreatePostDto) {
     const { published, title, tags } = createPostDto;
 
-    const slug = title.split(' ').join('-');
+    let slug = slugify(title, { lower: true });
+    const existPostSameSlug = await this.prisma.post.findFirst({
+      where: {
+        slug,
+      },
+    });
+
+    if (existPostSameSlug) {
+      slug = await this.generateUniqueSlug(title);
+    }
 
     const data = {
       ...createPostDto,
@@ -151,6 +162,11 @@ export class PostsService {
       include: {
         author: true,
         tags: { include: { tag: true } }, // Return all fields
+        _count: {
+          select: {
+            comments: true,
+          },
+        },
       },
     });
 
@@ -160,29 +176,9 @@ export class PostsService {
     };
   }
 
-  async update(id: number, authorId: number, updatePostDto: UpdatePostDto) {
+  async update(slug: string, userId: number, updatePostDto: UpdatePostDto) {
     const { tags, ...data } = updatePostDto;
 
-    /**
-     * if title exist in request we should update slug too
-     */
-    if (updatePostDto?.title) {
-      data['slug'] = updatePostDto?.title.split(' ').join('-');
-    }
-
-    /**
-     * if published field exist in request and is true . we check if field publishedAt is
-     * null,if it is null we change it to now date.
-     */
-    if (updatePostDto?.published) {
-      const post = await this.prisma.post.findUnique({
-        where: { id },
-      });
-
-      if (post.publishedAt === null) {
-        data['publishedAt'] = new Date();
-      }
-    }
     /**
      * update tags:
      * we recive from request fields tags include tags that author want to be the tags of
@@ -199,6 +195,12 @@ export class PostsService {
      * - delete ids => [1,2,3] - [1,3] = [2]
      * - add ids => [1,3] - [1,2,3] = []
      */
+    const { id } = await this.prisma.post.findFirst({
+      where: {
+        slug,
+      },
+    });
+
     if (tags) {
       const existTags = await this.prisma.tagsOnPosts.findMany({
         where: {
@@ -236,6 +238,26 @@ export class PostsService {
     });
   }
 
+  async findOneBySlug(slug: string) {
+    const post = await this.prisma.post.findUnique({
+      where: {
+        slug,
+      },
+      include: {
+        tags: true,
+      },
+    });
+
+    if (post) {
+      return post;
+    } else {
+      throw new HttpException(
+        'no post match this slug',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
   remove(id: number) {
     return this.prisma.post.delete({
       where: {
@@ -266,5 +288,24 @@ export class PostsService {
     });
 
     return { nbrPosts };
+  }
+
+  async generateUniqueSlug(title) {
+    const randomStr = randomstring.generate({
+      length: 7,
+      charset: 'alphabetic',
+    });
+    let slug = slugify(title, { lower: true }) + '-' + randomStr;
+
+    try {
+      const existSlug = await this.prisma.post.findFirst({
+        where: {
+          slug: slug,
+        },
+      });
+      return existSlug ? await this.generateUniqueSlug(title) : slug;
+    } catch (error) {
+      console.log(error);
+    }
   }
 }
