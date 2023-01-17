@@ -20,6 +20,7 @@ model User {
   registeredAt DateTime  @default(now())
   comments     Comment[]
   posts        Post[]
+  reactions    PostReactions[]
 }
 
 model Post {
@@ -35,6 +36,7 @@ model Post {
   author      User                @relation(fields: [authorId], references: [id],onDelete: Cascade)
   comments    Comment[]
   tags        TagsOnPosts[]
+  reactions   PostReactions[]
 }
 
 model Comment {
@@ -64,4 +66,15 @@ model TagsOnPosts {
   tag    Tag  @relation(fields: [tagId], references: [id],onDelete: Cascade)
 
   @@id([postId, tagId])
+}
+
+
+
+model PostReactions{
+  id Int @id @default(autoincrement())
+  postId Int
+  userId Int
+  post Post @relation(fields: [postId],references: [id],onDelete:Cascade,onUpdate: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade,onUpdate: Cascade)
+  createdAt   DateTime  @default(now())
 }

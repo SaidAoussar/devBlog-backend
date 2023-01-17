@@ -165,6 +165,7 @@ export class PostsService {
         _count: {
           select: {
             comments: true,
+            reactions: true,
           },
         },
       },

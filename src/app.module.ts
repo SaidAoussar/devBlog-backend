@@ -9,6 +9,7 @@ import { MailModule } from './mail/mail.module';
 import { TagsModule } from './tags/tags.module';
 import { CommentsModule } from './comments/comments.module';
 import { ConfigModule } from '@nestjs/config';
+import { PostReactionsModule } from './post-reactions/post-reactions.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { ConfigModule } from '@nestjs/config';
     MailModule,
     TagsModule,
     CommentsModule,
+    PostReactionsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
