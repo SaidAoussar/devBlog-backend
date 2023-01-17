@@ -11,11 +11,6 @@ export class CreateCommentDto {
   @IsString()
   @IsNotEmpty()
   @ApiProperty()
-  title: string;
-
-  @IsString()
-  @IsNotEmpty()
-  @ApiProperty()
   content: string;
 
   @IsBoolean()
@@ -27,9 +22,4 @@ export class CreateCommentDto {
   @IsNotEmpty()
   @ApiProperty()
   postId: number;
-
-  @IsNumber()
-  @IsNotEmpty()
-  @ApiProperty()
-  userId: number;
 }

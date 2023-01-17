@@ -7,8 +7,12 @@ import {
   Param,
   Delete,
   ParseIntPipe,
+  UseGuards,
+  Query,
 } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { ApiTags } from '@nestjs/swagger';
+import { User } from 'src/utils/user.decorator';
 import { CommentsService } from './comments.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
@@ -18,22 +22,16 @@ import { UpdateCommentDto } from './dto/update-comment.dto';
 export class CommentsController {
   constructor(private readonly commentsService: CommentsService) {}
 
-  /**
-   *
-   */
+  @UseGuards(AuthGuard('jwt'))
   @Post()
-  create(@Body() createCommentDto: CreateCommentDto) {
-    return this.commentsService.create(createCommentDto);
+  create(@User() user, @Body() createCommentDto: CreateCommentDto) {
+    console.log(user);
+    return this.commentsService.create(+user.id, createCommentDto);
   }
 
-  @Get()
-  findAll() {
-    return this.commentsService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.commentsService.findOne(+id);
+  @Get(':post_id')
+  findAll(@Param('post_id') post_id, @Query() query) {
+    return this.commentsService.findAll(+post_id, +query.page, +query.per_page);
   }
 
   @Patch(':id')

@@ -6,18 +6,54 @@ import { UpdateCommentDto } from './dto/update-comment.dto';
 @Injectable()
 export class CommentsService {
   constructor(private readonly prisma: PrismaService) {}
-  create(createCommentDto: CreateCommentDto) {
-    let data = { ...createCommentDto };
-    if (createCommentDto?.published) {
-      data['publishedAt'] = new Date();
-    }
+  create(id: number, createCommentDto: CreateCommentDto) {
     return this.prisma.comment.create({
-      data,
+      data: {
+        ...createCommentDto,
+        userId: id,
+      },
     });
   }
 
-  findAll() {
-    return this.prisma.comment.findMany();
+  async findAll(post_id: number, page: number, per_page: number) {
+    if (isNaN(page)) {
+      page = 1;
+    }
+    if (isNaN(per_page)) {
+      per_page = 10;
+    }
+
+    const where = {
+      postId: post_id,
+    };
+
+    const total_count = await this.prisma.comment.count({
+      where,
+    });
+
+    if (Math.ceil(total_count / per_page) < page || page < 1) {
+      return {};
+    }
+    const records = await this.prisma.comment.findMany({
+      skip: per_page * (page - 1),
+      take: per_page,
+      where,
+      include: {
+        user: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    return {
+      _metadata: {
+        page,
+        per_page,
+        total_count,
+      },
+      records,
+    };
   }
 
   findOne(id: number) {
@@ -29,18 +65,11 @@ export class CommentsService {
   }
 
   async update(id: number, updateCommentDto: UpdateCommentDto) {
-    let data = updateCommentDto;
-    if (updateCommentDto?.published) {
-      const comment = await this.findOne(id);
-      if (comment.publishedAt === null) {
-        data['publishedAt'] = new Date();
-      }
-    }
     return this.prisma.comment.update({
       where: {
         id,
       },
-      data,
+      data: updateCommentDto,
     });
   }
 
