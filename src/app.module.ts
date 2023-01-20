@@ -10,6 +10,7 @@ import { TagsModule } from './tags/tags.module';
 import { CommentsModule } from './comments/comments.module';
 import { ConfigModule } from '@nestjs/config';
 import { PostReactionsModule } from './post-reactions/post-reactions.module';
+import { SavesModule } from './saves/saves.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { PostReactionsModule } from './post-reactions/post-reactions.module';
     TagsModule,
     CommentsModule,
     PostReactionsModule,
+    SavesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
