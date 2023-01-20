@@ -5,6 +5,7 @@ import {
   Param,
   ParseIntPipe,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
@@ -22,8 +23,8 @@ export class PostReactionsController {
 
   @UseGuards(AuthGuard('jwt'))
   @Get('check')
-  check(@User() user, @Body() body) {
-    return this.postReactionsService.check(+user.id, body.postId);
+  check(@User() user, @Query() query) {
+    return this.postReactionsService.check(+user.id, +query.post_id);
   }
 
   @Get(':postId')

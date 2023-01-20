@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
@@ -39,6 +39,13 @@ export class PostReactionsService {
    * check if user reacted to the post before
    */
   async check(userId: number, postId: number) {
+    if (isNaN(userId)) {
+      throw new HttpException('userId is undefined', HttpStatus.BAD_REQUEST);
+    }
+
+    if (isNaN(postId)) {
+      throw new HttpException('postId is undefined', HttpStatus.BAD_REQUEST);
+    }
     const reaction = await this.prisma.postReactions.findFirst({
       where: {
         userId,
