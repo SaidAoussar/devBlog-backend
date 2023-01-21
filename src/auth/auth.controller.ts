@@ -6,12 +6,13 @@ import {
   Body,
   Get,
   Param,
+  Patch,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiTags } from '@nestjs/swagger';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { AuthService } from './auth.service';
-import { ChangePasswordDto } from './dto/change-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -39,11 +40,8 @@ export class AuthController {
     return this.authService.forgotPassword(email);
   }
 
-  @Post('/change-password/:token')
-  changePassword(
-    @Body() changePasswordDto: ChangePasswordDto,
-    @Param('token') token: string,
-  ) {
-    return this.authService.changePassword(changePasswordDto, token);
+  @Patch('/reset-password')
+  resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
+    return this.authService.resetPassword(resetPasswordDto);
   }
 }

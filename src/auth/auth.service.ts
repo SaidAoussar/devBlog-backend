@@ -1,11 +1,16 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { MailService } from 'src/mail/mail.service';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
 
 import { UsersService } from 'src/users/users.service';
-import { ChangePasswordDto } from './dto/change-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -65,43 +70,59 @@ export class AuthService {
     }
     const token = this.jwtService.sign(
       { email: user.email, sub: user.id },
-      { expiresIn: '5m' },
+      { expiresIn: '1d' },
     );
 
-    await this.mailService.sendEmail(
+    const sendEmail = await this.mailService.sendEmail(
       email,
       'forgot password',
-      `<h2>please clik on given link to change your password<h2>
-      <a href='http://localhost:3000/auth/change-password/${token}'>link</a>`,
+      `<div style="text-align:center;">
+        <h2>Hi ${user.firstName} ${user.lastName},</h2>
+        <p style="font-size:18px;">You recently requested to reset your password for your     <strong>devBlog</strong> account. Use the button below to reset it. <strong>This password reset is only valid for the next 24 hours</strong>.
+        </p>
+        <div style="">
+          <a href='${process.env.FRONTEND_URL}/reset-password?token=${token}' style="display: inline-block;background-color: #22BC66;padding: 10px 18px; color:white;text-decoration:none;border-radius: 8px;;">Reset your pasword</a>
+        </div>
+      </div>
+      `,
     );
-    return {
-      message: 'success send email to user',
-    };
+
+    if (sendEmail.accepted[0] === user.email) {
+      return {
+        message: 'Your password reset instructions have been sent',
+      };
+    } else {
+      throw new HttpException(
+        'something go wrong try to send later',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
   }
 
-  async changePassword(
-    changePasswordDto: ChangePasswordDto,
-    token: string,
-  ): Promise<any> {
-    console.log(token);
-    const verify = await this.jwtService.verify(token);
-    if (!verify) {
-      throw new BadRequestException('invalid token');
+  async resetPassword(resetPasswordDto: ResetPasswordDto): Promise<any> {
+    try {
+      const verify = await this.jwtService.verify(resetPasswordDto.token);
+
+      const user = await this.usersService.updatePassword(
+        verify.sub,
+        resetPasswordDto.newPassword,
+      );
+
+      if (!user) {
+        throw new HttpException('something wrong', HttpStatus.BAD_REQUEST);
+      }
+
+      return {
+        message: 'password is reset with success.',
+      };
+    } catch (error) {
+      if (error.name === 'JsonWebTokenError') {
+        throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+      }
+
+      if (error.name === 'TokenExpiredError') {
+        throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+      }
     }
-
-    const user = await this.usersService.updatePassword(
-      verify.sub,
-      changePasswordDto.password,
-    );
-
-    console.log(user);
-
-    if (!user) {
-      throw new BadRequestException('id dont exist');
-    }
-
-    return {
-      message: 'password is change with success',
-    };
   }
 }
