@@ -26,6 +26,7 @@ export class PostsService {
 
     const data = {
       ...createPostDto,
+      published: true,
       slug,
       authorId,
       tags: {
@@ -296,8 +297,7 @@ export class PostsService {
       length: 7,
       charset: 'alphabetic',
     });
-    let slug = slugify(title, { lower: true }) + '-' + randomStr;
-
+    const slug = slugify(title, { lower: true }) + '-' + randomStr;
     try {
       const existSlug = await this.prisma.post.findFirst({
         where: {

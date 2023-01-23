@@ -12,6 +12,7 @@ export class CommentsService {
         ...createCommentDto,
         userId: id,
       },
+      include: { user: true },
     });
   }
 
