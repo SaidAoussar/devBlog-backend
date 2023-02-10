@@ -9,9 +9,11 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { ApiTags } from '@nestjs/swagger';
 import { User } from 'src/utils/user.decorator';
 import { PostReactionsService } from './post-reactions.service';
 
+@ApiTags('post-reactions')
 @Controller('post-reactions')
 export class PostReactionsController {
   constructor(private readonly postReactionsService: PostReactionsService) {}

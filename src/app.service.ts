@@ -5,8 +5,6 @@ import slugify from 'slugify';
 @Injectable()
 export class AppService {
   getHello() {
-    const randomstr = slugify('ello from kasa');
-
-    return randomstr;
+    return 'Welcome to Restfull Api deBlog';
   }
 }
