@@ -132,6 +132,12 @@ export class PostsService {
       include: {
         author: true,
         tags: { include: { tag: true } },
+        _count: {
+          select: {
+            comments: true,
+            reactions: true,
+          },
+        },
       },
       orderBy: [{ createdAt: 'desc' }],
     });
@@ -156,7 +162,7 @@ export class PostsService {
 
   async findOne(id: number) {
     // Modeling and querying many-to-many relations
-    const posts = await this.prisma.post.findUnique({
+    const post = await this.prisma.post.findUnique({
       where: {
         id,
       },
@@ -173,8 +179,8 @@ export class PostsService {
     });
 
     return {
-      ...posts,
-      tags: posts.tags.map((t) => t.tag),
+      ...post,
+      tags: post.tags.map((t) => t.tag),
     };
   }
 
@@ -246,12 +252,22 @@ export class PostsService {
         slug,
       },
       include: {
-        tags: true,
+        author: true,
+        tags: { include: { tag: true } }, // Return all fields
+        _count: {
+          select: {
+            comments: true,
+            reactions: true,
+          },
+        },
       },
     });
 
     if (post) {
-      return post;
+      return {
+        ...post,
+        tags: post.tags.map((t) => t.tag),
+      };
     } else {
       throw new HttpException(
         'no post match this slug',

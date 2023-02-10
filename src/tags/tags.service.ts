@@ -37,7 +37,9 @@ export class TagsService {
     });
 
     if (Math.ceil(total_count / per_page) < page || page < 1) {
-      return {};
+      return {
+        records: [],
+      };
     }
 
     const records = await this.prisma.tag.findMany({
@@ -48,6 +50,9 @@ export class TagsService {
         _count: {
           select: { posts: true },
         },
+      },
+      orderBy: {
+        posts: { _count: 'desc' },
       },
     });
     return {
