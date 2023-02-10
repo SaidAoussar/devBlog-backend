@@ -38,10 +38,21 @@ export class UsersController {
     return this.usersService.findOne(id);
   }
 
+  @Get('user/:username')
+  findByUsername(@Param('username') username: string): Promise<any> {
+    return this.usersService.findByUsername(username);
+  }
+
   @Patch('update-password')
   @UseGuards(AuthGuard('jwt'))
   updatePassword(@User() user, @Body() updatePasswordDto: UpdatePasswordDto) {
     return this.usersService.setNewPassword(+user.id, updatePasswordDto);
+  }
+
+  @Patch('update-mode')
+  @UseGuards(AuthGuard('jwt'))
+  updateMode(@User() user, @Query() query) {
+    return this.usersService.updateMode(+user.id, query.mode);
   }
 
   @Patch(':id')

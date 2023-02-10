@@ -1,5 +1,5 @@
 import { Injectable, HttpStatus, HttpException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, Mode } from '@prisma/client';
 
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -76,6 +76,27 @@ export class UsersService {
     const { password, ...user } = await this.prisma.user.findUnique({
       where: {
         id,
+      },
+      include: {
+        _count: {
+          select: {
+            posts: true,
+            comments: true,
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      throw new HttpException('user not exist', HttpStatus.BAD_REQUEST);
+    }
+    return user;
+  }
+
+  async findByUsername(username: string) {
+    const { password, ...user } = await this.prisma.user.findFirst({
+      where: {
+        username,
       },
       include: {
         _count: {
@@ -202,5 +223,19 @@ export class UsersService {
       },
     });
     return userUpdate;
+  }
+
+  async updateMode(id: number, mode: string) {
+    if (mode === null) {
+      throw new HttpException('mode is undefined', HttpStatus.BAD_REQUEST);
+    }
+    const user = await this.prisma.user.update({
+      where: { id },
+      data: {
+        mode: Mode[mode],
+      },
+    });
+
+    return user;
   }
 }
