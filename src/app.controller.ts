@@ -23,21 +23,4 @@ export class AppController {
   getHello(): string {
     return this.appService.getHello();
   }
-
-  //get user auth when send token
-  @UseGuards(AuthGuard('jwt'))
-  @Get('/profile')
-  getProfile(@Request() req) {
-    return req.user;
-  }
-
-  @Get('plain-text')
-  async plainTextEmail(@Query('toemail') toEmail) {
-    return await this.mailService.sendMail({
-      to: toEmail,
-      from: 'aoussarsaid33@gmail.com',
-      subject: 'simple plain text',
-      text: 'welcome to nextjs demo',
-    });
-  }
 }

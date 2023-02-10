@@ -10,10 +10,11 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { query } from 'express';
+import { ApiTags } from '@nestjs/swagger';
 import { User } from 'src/utils/user.decorator';
 import { SavesService } from './saves.service';
 
+@ApiTags('saves')
 @Controller('saves')
 export class SavesController {
   constructor(private readonly savesService: SavesService) {}
