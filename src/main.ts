@@ -11,8 +11,10 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
 
   const config = new DocumentBuilder()
-    .setTitle('nest-blog-api')
-    .setDescription('blog api')
+    .setTitle('devBlog backend')
+    .setDescription(
+      'The DevBlog backend serves as the RESTful API for the DevBlog frontend',
+    )
     .setVersion('1.0.0')
     .build();
 
