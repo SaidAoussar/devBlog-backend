@@ -1,7 +1,7 @@
 # **devBlog Backend**
 
 Welcome to the repository for the backend of devBlog, the practice project for building a RESTful API blog.
-For the frontend part of devBlog app, please visit the repository for devBlog-frontend.
+For the frontend part of devBlog app, you can follow this link to access it [**devBlog frontend repo**](https://github.com/SaidAoussar/devBlog-frontend).
 
 ### **Built With**
 
